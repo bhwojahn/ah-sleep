@@ -4,7 +4,6 @@
   const form = document.querySelector('#sleep-form');
   const message = document.querySelector('#form-message');
   const results = document.querySelector('#results');
-  const awakeValue = document.querySelector('#awake-value');
   const intervalList = document.querySelector('#interval-list');
   const timeline = document.querySelector('#timeline');
   const copyStatus = document.querySelector('#copy-status');
@@ -48,29 +47,63 @@
     if (windowMinutesExact <= 0) throw new Error('Sleep end must be later than sleep start.');
     if (!Number.isInteger(windowMinutesExact)) throw new Error('The sleep window must resolve to whole minutes.');
     const stages = { Core: readDuration('core'), Deep: readDuration('deep'), REM: readDuration('rem') };
+    const awakeMinutes = readDuration('awake');
+    const wakeCountRaw = value('wake-count');
+    if (wakeCountRaw === '') throw new Error('Enter how many times you woke up.');
+    const wakeCount = Number(wakeCountRaw);
+    if (!Number.isSafeInteger(wakeCount) || wakeCount < 0 || wakeCount > 4) throw new Error('Wake-up count must be between 0 and 4.');
     const stageTotal = Object.values(stages).reduce((sum, duration) => sum + duration, 0);
-    if (!Number.isSafeInteger(stageTotal)) throw new Error('Combined stage duration is too large.');
+    if (!Number.isSafeInteger(stageTotal + awakeMinutes)) throw new Error('Combined duration is too large.');
     const windowMinutes = windowMinutesExact;
-    if (stageTotal > windowMinutes) throw new Error('Stage durations exceed the sleep window. Reduce one or more stage durations.');
-    return { start, end, windowMinutes, stages, awakeMinutes: windowMinutes - stageTotal };
+    const totalEntered = stageTotal + awakeMinutes;
+    if (totalEntered > windowMinutes) throw new Error('Stage and awake durations exceed the sleep window. Reduce one or more durations.');
+    if (totalEntered < windowMinutes) throw new Error('Stage and awake durations must add up exactly to the sleep window.');
+    if (awakeMinutes === 0 && wakeCount !== 0) throw new Error('Set wake-up count to 0 when awake time is 0.');
+    if (awakeMinutes > 0 && wakeCount === 0) throw new Error('Enter at least 1 wake-up when awake time is greater than 0.');
+    if (wakeCount > awakeMinutes) throw new Error('Each wake-up needs at least 1 minute of awake time.');
+    return { start, end, windowMinutes, stages, awakeMinutes, wakeCount };
   }
 
-  // Split awake minutes among the four gaps using a uniform integer composition.
-  // If it is possible, avoid repeating the prior distribution on regeneration.
-  function distributeAwake(total) {
-    if (total === 0) return [0, 0, 0, 0];
-    let distribution;
-    do {
-      const cuts = Array.from({ length: 3 }, () => Math.floor(Math.random() * (total + 1))).sort((a, b) => a - b);
-      const points = [0, ...cuts, total];
-      distribution = [points[1] - points[0], points[2] - points[1], points[3] - points[2], points[4] - points[3]];
-    } while (lastAwakeDistribution && distribution.every((part, index) => part === lastAwakeDistribution[index]));
+  // Place the requested number of positive awake intervals in distinct gaps.
+  // Randomly split the total while guaranteeing at least one minute per interval.
+  function distributeAwake(total, count) {
+    if (count === 0) return [0, 0, 0, 0];
+    let distribution = null;
+    let attempts = 0;
+    while (attempts < 12) {
+      attempts += 1;
+      const slots = [0, 1, 2, 3];
+      for (let index = slots.length - 1; index > 0; index -= 1) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+        [slots[index], slots[swapIndex]] = [slots[swapIndex], slots[index]];
+      }
+      const activeSlots = slots.slice(0, count);
+      const remainder = total - count;
+      const cuts = Array.from({ length: count - 1 }, () => Math.floor(Math.random() * (remainder + 1))).sort((a, b) => a - b);
+      const points = [0, ...cuts, remainder];
+      const parts = Array.from({ length: count }, (_, index) => points[index + 1] - points[index] + 1);
+      const candidate = [0, 0, 0, 0];
+      activeSlots.forEach((slot, index) => { candidate[slot] = parts[index]; });
+      distribution = candidate;
+      if (!lastAwakeDistribution || !candidate.every((part, index) => part === lastAwakeDistribution[index])) break;
+    }
+    // A fallback guarantees a different result when another arrangement exists.
+    if (lastAwakeDistribution && distribution.every((part, index) => part === lastAwakeDistribution[index])) {
+      const inactiveSlot = distribution.findIndex((part) => part === 0);
+      if (inactiveSlot !== -1) {
+        const activeSlot = distribution.findIndex((part) => part > 0);
+        [distribution[activeSlot], distribution[inactiveSlot]] = [0, distribution[activeSlot]];
+      } else {
+        const donor = distribution.findIndex((part) => part > 1);
+        if (donor !== -1) distribution[(donor + 1) % 4] += 1, distribution[donor] -= 1;
+      }
+    }
     lastAwakeDistribution = distribution;
     return distribution;
   }
 
   function constructIntervals(input) {
-    const awake = distributeAwake(input.awakeMinutes);
+    const awake = distributeAwake(input.awakeMinutes, input.wakeCount);
     const sequence = [
       { stage: 'Awake', duration: awake[0] }, { stage: 'Core', duration: input.stages.Core },
       { stage: 'Awake', duration: awake[1] }, { stage: 'Deep', duration: input.stages.Deep },
@@ -125,18 +158,6 @@
     copyStatus.textContent = '';
   }
 
-  function updateAwakePreview() {
-    try {
-      const input = readInputs();
-      awakeValue.textContent = durationLabel(input.awakeMinutes);
-      message.hidden = true;
-    } catch (_) {
-      awakeValue.textContent = '—';
-    }
-  }
-
-  form.addEventListener('input', updateAwakePreview);
-  form.addEventListener('change', updateAwakePreview);
   function generateTimeline() {
     try {
       const input = readInputs();
@@ -169,7 +190,6 @@
     form.reset();
     results.hidden = true;
     message.hidden = true;
-    awakeValue.textContent = '—';
     copyStatus.textContent = '';
     generatedIntervals = [];
     lastAwakeDistribution = null;

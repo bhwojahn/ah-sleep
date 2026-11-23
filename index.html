@@ -47,8 +47,9 @@
           <fieldset class="stage-input core-input"><legend><i></i>Core</legend><label><span>Hours</span><input id="core-hours" type="number" min="0" step="1" inputmode="numeric" placeholder="0" required></label><label><span>Minutes</span><input id="core-minutes" type="number" min="0" max="59" step="1" inputmode="numeric" placeholder="0" required></label></fieldset>
           <fieldset class="stage-input deep-input"><legend><i></i>Deep</legend><label><span>Hours</span><input id="deep-hours" type="number" min="0" step="1" inputmode="numeric" placeholder="0" required></label><label><span>Minutes</span><input id="deep-minutes" type="number" min="0" max="59" step="1" inputmode="numeric" placeholder="0" required></label></fieldset>
           <fieldset class="stage-input rem-input"><legend><i></i>REM</legend><label><span>Hours</span><input id="rem-hours" type="number" min="0" step="1" inputmode="numeric" placeholder="0" required></label><label><span>Minutes</span><input id="rem-minutes" type="number" min="0" max="59" step="1" inputmode="numeric" placeholder="0" required></label></fieldset>
+          <fieldset class="stage-input awake-input"><legend><i></i>Awake</legend><label><span>Hours</span><input id="awake-hours" type="number" min="0" step="1" inputmode="numeric" placeholder="0" required></label><label><span>Minutes</span><input id="awake-minutes" type="number" min="0" max="59" step="1" inputmode="numeric" placeholder="0" required></label></fieldset>
         </div>
-        <div class="awake-summary" aria-live="polite"><div><span class="awake-dot"></span><span>Calculated awake time</span></div><strong id="awake-value">—</strong></div>
+        <div class="wake-count-row"><label for="wake-count">Times woken up</label><input id="wake-count" type="number" min="0" max="4" step="1" inputmode="numeric" value="0" required><span>Each wake-up becomes one Awake interval (up to 4).</span></div>
       </section>
 
       <div id="form-message" class="message" role="alert" hidden></div>
