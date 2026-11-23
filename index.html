@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101113">
+  <title>Sleep Stage Calculator</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="page-header">
+      <div class="brand-mark" aria-hidden="true">S</div>
+      <div>
+        <p class="eyebrow">PERSONAL SLEEP TOOL</p>
+        <h1>Sleep stage calculator</h1>
+        <p class="intro">Rebuild a sleep timeline from your WHOOP stage totals.</p>
+      </div>
+    </header>
+
+    <form id="sleep-form" novalidate>
+      <section class="panel" aria-labelledby="window-heading">
+        <div class="section-heading">
+          <div><p class="eyebrow">01 / SLEEP WINDOW</p><h2 id="window-heading">When did you sleep?</h2></div>
+        </div>
+        <div class="window-grid">
+          <fieldset class="time-group">
+            <legend>Sleep start</legend>
+            <label><span>Date</span><input id="start-date" type="date" required></label>
+            <label><span>Time</span><input id="start-time" type="time" required></label>
+          </fieldset>
+          <fieldset class="time-group">
+            <legend>Sleep end</legend>
+            <label><span>Date</span><input id="end-date" type="date" required></label>
+            <label><span>Time</span><input id="end-time" type="time" required></label>
+          </fieldset>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="stages-heading">
+        <div class="section-heading">
+          <div><p class="eyebrow">02 / STAGE TOTALS</p><h2 id="stages-heading">How much time in each stage?</h2></div>
+          <span class="unit-note">Hours + minutes</span>
+        </div>
+        <div class="stage-grid">
+          <fieldset class="stage-input core-input"><legend><i></i>Core</legend><label><span>Hours</span><input id="core-hours" type="number" min="0" step="1" inputmode="numeric" placeholder="0" required></label><label><span>Minutes</span><input id="core-minutes" type="number" min="0" max="59" step="1" inputmode="numeric" placeholder="0" required></label></fieldset>
+          <fieldset class="stage-input deep-input"><legend><i></i>Deep</legend><label><span>Hours</span><input id="deep-hours" type="number" min="0" step="1" inputmode="numeric" placeholder="0" required></label><label><span>Minutes</span><input id="deep-minutes" type="number" min="0" max="59" step="1" inputmode="numeric" placeholder="0" required></label></fieldset>
+          <fieldset class="stage-input rem-input"><legend><i></i>REM</legend><label><span>Hours</span><input id="rem-hours" type="number" min="0" step="1" inputmode="numeric" placeholder="0" required></label><label><span>Minutes</span><input id="rem-minutes" type="number" min="0" max="59" step="1" inputmode="numeric" placeholder="0" required></label></fieldset>
+        </div>
+        <div class="awake-summary" aria-live="polite"><div><span class="awake-dot"></span><span>Calculated awake time</span></div><strong id="awake-value">—</strong></div>
+      </section>
+
+      <div id="form-message" class="message" role="alert" hidden></div>
+      <div class="actions"><button class="button button-primary" type="submit">Generate timeline <span aria-hidden="true">↗</span></button><button class="button button-secondary" id="reset-button" type="button">Reset</button></div>
+    </form>
+
+    <section id="results" class="panel results-panel" aria-labelledby="results-heading" hidden>
+      <div class="section-heading results-heading"><div><p class="eyebrow">03 / YOUR TIMELINE</p><h2 id="results-heading">Sleep breakdown</h2></div><div class="result-actions"><button class="button button-secondary copy-button" id="regenerate-button" type="button">Regenerate</button><button class="button button-secondary copy-button" id="copy-button" type="button">Copy results</button></div></div>
+      <div class="timeline-wrap"><div id="timeline" class="timeline" role="img" aria-label="Sleep stage timeline"></div><div class="timeline-labels"><span id="timeline-start"></span><span id="timeline-end"></span></div></div>
+      <ol id="interval-list" class="interval-list"></ol>
+      <p id="copy-status" class="copy-status" aria-live="polite"></p>
+    </section>
+    <footer>All calculations stay on this device.</footer>
+  </main>
+</body>
+</html>
